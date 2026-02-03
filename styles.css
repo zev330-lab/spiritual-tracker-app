@@ -1,0 +1,142 @@
+/* Basic reset */
+* {
+  box-sizing: border-box;
+}
+/* Define a rich palette derived from the new icon */
+:root {
+  --color-dark-green: #146a42;
+  --color-light-green: #6cb55e;
+  --color-purple: #7f3e98;
+  --color-pink: #b23880;
+  --color-lavender: #c6a7d9;
+  --color-cream: #f7f0e5;
+  --color-pale-blue: #e9eff7;
+  --bg: var(--color-pale-blue);
+  --text: #333333;
+  --primary: var(--color-purple);
+  --secondary: var(--color-light-green);
+  --accent1: var(--color-pink);
+  --accent2: var(--color-dark-green);
+  --accent3: var(--color-lavender);
+  --accent4: var(--color-cream);
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+header {
+  background-color: var(--primary);
+  color: #ffffff;
+  padding: 1rem;
+  text-align: center;
+}
+header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+main {
+  flex: 1;
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+footer {
+  background-color: var(--primary);
+  color: #ffffff;
+  text-align: center;
+  padding: 0.5rem;
+}
+.section {
+  background-color: var(--accent4);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.hidden {
+  display: none;
+}
+form label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+form input[type="number"],
+form input[type="date"],
+form input[type="time"],
+form select,
+form textarea {
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+button {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+button.primary {
+  /* Primary actions use the dark green accent */
+  background-color: var(--accent2) !important;
+  color: #ffffff;
+}
+
+/* Style for general buttons that are not marked as primary */
+button:not(.primary) {
+  background-color: var(--secondary);
+  color: #ffffff;
+}
+
+button:not(.primary):hover {
+  background-color: var(--accent3);
+}
+button.primary:hover {
+  background-color: var(--accent1) !important;
+}
+
+/* Ensure the Record Today's Metrics button uses the primary action colour even if caching interferes */
+#recordMetricsBtn {
+  background-color: var(--accent2) !important;
+  color: #ffffff;
+}
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+#instructions {
+  margin-top: 1rem;
+  white-space: pre-wrap;
+  background: var(--accent4);
+  padding: 0.5rem;
+  /* Use the dark green accent to highlight instructional content */
+  border-left: 3px solid var(--accent2);
+}
+#dataTableContainer table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+#dataTableContainer th,
+#dataTableContainer td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+#dataTableContainer th {
+  /* Use the dark green accent for table headers */
+  background-color: var(--accent2);
+  color: #ffffff;
+}
