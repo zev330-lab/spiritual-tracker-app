@@ -433,6 +433,11 @@ body {
   font-size: 0.9rem;
   outline: none;
   transition: all var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: dark;
+  box-sizing: border-box;
+  height: 48px;
 }
 
 .ob-input:focus {
@@ -1335,7 +1340,7 @@ input[type="range"]::-moz-range-track {
 
 .setup-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 14px;
   background: var(--bg-subtle);
   border: 1px solid var(--border);
   border-radius: var(--radius-btn);
@@ -1344,6 +1349,11 @@ input[type="range"]::-moz-range-track {
   font-size: 0.88rem;
   outline: none;
   transition: all var(--transition);
+  -webkit-appearance: none;
+  appearance: none;
+  color-scheme: dark;
+  box-sizing: border-box;
+  height: 48px;
 }
 
 .setup-input:focus {
