@@ -1,14 +1,22 @@
 {
   "name": "Spiritual Practice Tracker",
-  "short_name": "SpiritualTracker",
+  "short_name": "Practice",
   "description": "A/B day spiritual practice and metrics tracker",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#f8f5f0",
-  "theme_color": "#5a2d76",
+  "background_color": "#0f0a1a",
+  "theme_color": "#0f0a1a",
   "icons": [
-    { "src": "icon-192x192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
