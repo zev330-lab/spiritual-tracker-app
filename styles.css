@@ -1,142 +1,119 @@
-/* Basic reset */
-* {
-  box-sizing: border-box;
-}
-/* Define a rich palette derived from the new icon */
+/* Spiritual Practice Tracker — Contemplative / Organic Design */
 :root {
-  --color-dark-green: #146a42;
-  --color-light-green: #6cb55e;
-  --color-purple: #7f3e98;
-  --color-pink: #b23880;
-  --color-lavender: #c6a7d9;
-  --color-cream: #f7f0e5;
-  --color-pale-blue: #e9eff7;
-  --bg: var(--color-pale-blue);
-  --text: #333333;
-  --primary: var(--color-purple);
-  --secondary: var(--color-light-green);
-  --accent1: var(--color-pink);
-  --accent2: var(--color-dark-green);
-  --accent3: var(--color-lavender);
-  --accent4: var(--color-cream);
+  --purple: #5a2d76;
+  --purple-light: #7a4d96;
+  --purple-deep: #3d1a54;
+  --green: #2d6e4a;
+  --green-light: #4a9e6e;
+  --green-pale: #e8f3ed;
+  --pink: #a3367a;
+  --lavender: #c8a8d8;
+  --lavender-light: #ede4f2;
+  --cream: #f8f5f0;
+  --warm: #f3efe8;
+  --text: #2c2a2e;
+  --text-light: #6a666e;
+  --text-muted: #9a969e;
+  --border: #e2ddd6;
+  --white: #ffffff;
+  --shadow: rgba(90,45,118,0.06);
+  --shadow-md: rgba(90,45,118,0.12);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --transition: 0.3s cubic-bezier(0.4,0,0.2,1);
 }
 
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background-color: var(--bg);
-  color: var(--text);
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-header {
-  background-color: var(--primary);
-  color: #ffffff;
-  padding: 1rem;
-  text-align: center;
-}
-header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-}
-main {
-  flex: 1;
-  padding: 1rem;
-  max-width: 800px;
-  margin: 0 auto;
-  width: 100%;
-}
-footer {
-  background-color: var(--primary);
-  color: #ffffff;
-  text-align: center;
-  padding: 0.5rem;
-}
-.section {
-  background-color: var(--accent4);
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-.hidden {
-  display: none;
-}
-form label {
-  display: block;
-  margin-bottom: 0.5rem;
-}
-form input[type="number"],
-form input[type="date"],
-form input[type="time"],
-form select,
-form textarea {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 1rem;
-}
-button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  margin: 0.5rem 0;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-button.primary {
-  /* Primary actions use the dark green accent */
-  background-color: var(--accent2) !important;
-  color: #ffffff;
-}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+body{font-family:'Nunito Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100dvh;display:flex;flex-direction:column}
+#app-shell{display:flex;flex-direction:column;min-height:100dvh}
 
-/* Style for general buttons that are not marked as primary */
-button:not(.primary) {
-  background-color: var(--secondary);
-  color: #ffffff;
-}
+/* ─── Header ──────────────────────────────────── */
+header{background:linear-gradient(135deg,var(--purple-deep) 0%,var(--purple) 60%,var(--purple-light) 100%);color:#fff;padding:1.25rem 1.5rem 0.75rem;text-align:center}
+.logo{font-family:'Cormorant Garamond',serif;font-size:1.65rem;font-weight:600;letter-spacing:0.02em;line-height:1}
+.tagline{font-size:0.7rem;font-weight:300;opacity:0.5;letter-spacing:0.25em;text-transform:uppercase;margin-top:0.15rem}
 
-button:not(.primary):hover {
-  background-color: var(--accent3);
-}
-button.primary:hover {
-  background-color: var(--accent1) !important;
-}
+/* ─── Nav ─────────────────────────────────────── */
+#nav{display:flex;background:var(--white);border-bottom:1px solid var(--border)}
+.nav-btn{flex:1;background:none;border:none;padding:0.7rem 0.5rem;cursor:pointer;font-family:inherit;font-size:0.75rem;font-weight:500;color:var(--text-muted);border-bottom:2.5px solid transparent;transition:all var(--transition)}
+.nav-btn.active{color:var(--purple);border-bottom-color:var(--purple);font-weight:600}
+.nav-btn:hover{color:var(--text)}
+.nav-icon{margin-right:0.2rem}
 
-/* Ensure the Record Today's Metrics button uses the primary action colour even if caching interferes */
-#recordMetricsBtn {
-  background-color: var(--accent2) !important;
-  color: #ffffff;
-}
-.nav-buttons {
-  display: flex;
-  justify-content: space-between;
-}
-#instructions {
-  margin-top: 1rem;
-  white-space: pre-wrap;
-  background: var(--accent4);
-  padding: 0.5rem;
-  /* Use the dark green accent to highlight instructional content */
-  border-left: 3px solid var(--accent2);
-}
-#dataTableContainer table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-#dataTableContainer th,
-#dataTableContainer td {
-  border: 1px solid #ddd;
-  padding: 0.5rem;
-  text-align: left;
-}
-#dataTableContainer th {
-  /* Use the dark green accent for table headers */
-  background-color: var(--accent2);
-  color: #ffffff;
-}
+/* ─── Main ────────────────────────────────────── */
+main{flex:1;padding:1.25rem;max-width:600px;width:100%;margin:0 auto;animation:fadeUp .35s ease-out}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--purple-deep);margin-bottom:0.2rem}
+.page-subtitle{font-size:0.82rem;color:var(--text-muted);margin-bottom:1.25rem;font-weight:300}
+
+/* ─── Cards ───────────────────────────────────── */
+.card{background:var(--white);border-radius:var(--radius);padding:1.15rem;margin-bottom:0.85rem;box-shadow:0 1px 4px var(--shadow);border:1px solid var(--border);transition:box-shadow var(--transition)}
+.card:hover{box-shadow:0 4px 12px var(--shadow-md)}
+.card-label{font-family:'Cormorant Garamond',serif;font-size:0.95rem;font-weight:600;color:var(--purple-deep);margin-bottom:0.5rem}
+
+/* ─── Day Type Badge ──────────────────────────── */
+.day-badge{display:inline-block;padding:0.35rem 1rem;border-radius:20px;font-weight:700;font-size:0.8rem;letter-spacing:0.05em}
+.day-badge.a-day{background:var(--lavender-light);color:var(--purple)}
+.day-badge.b-day{background:var(--green-pale);color:var(--green)}
+
+/* ─── Instructions ────────────────────────────── */
+.instructions{white-space:pre-wrap;font-size:0.84rem;line-height:1.7;color:var(--text-light);padding:1rem;background:var(--warm);border-radius:var(--radius-sm);border-left:3px solid var(--green)}
+.instructions strong{color:var(--purple-deep);font-weight:600}
+
+/* ─── Metrics Form ────────────────────────────── */
+.metric-group{margin-bottom:0.75rem}
+.metric-label{display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:0.82rem;color:var(--text);margin-bottom:0.35rem}
+.metric-hint{font-weight:400;font-size:0.7rem;color:var(--text-muted)}
+.slider-wrap{display:flex;align-items:center;gap:0.5rem}
+.slider-wrap input[type="range"]{flex:1;accent-color:var(--purple);height:6px}
+.slider-val{min-width:1.5rem;text-align:center;font-weight:700;font-size:0.9rem;color:var(--purple)}
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;border-bottom:1px solid var(--border)}
+.toggle-row:last-child{border:none}
+.toggle-label{font-size:0.84rem;color:var(--text)}
+.toggle-btn{background:var(--border);border:none;border-radius:20px;padding:0.3rem 0.85rem;font-family:inherit;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all var(--transition);color:var(--text-muted)}
+.toggle-btn.yes{background:var(--pink);color:#fff}
+
+textarea.input-field{width:100%;padding:0.6rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.88rem;color:var(--text);background:var(--warm);transition:all var(--transition);outline:none;resize:vertical;min-height:70px}
+textarea.input-field:focus{border-color:var(--purple);background:var(--white);box-shadow:0 0 0 3px rgba(90,45,118,0.1)}
+
+input.input-field{width:100%;padding:0.6rem 0.75rem;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:0.88rem;color:var(--text);background:var(--warm);transition:all var(--transition);outline:none}
+input.input-field:focus{border-color:var(--purple);background:var(--white);box-shadow:0 0 0 3px rgba(90,45,118,0.1)}
+
+.form-group{margin-bottom:0.85rem}
+.form-group label{display:block;font-weight:600;font-size:0.75rem;color:var(--purple);margin-bottom:0.3rem;text-transform:uppercase;letter-spacing:0.05em}
+
+/* ─── Buttons ─────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.65rem 1.25rem;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all var(--transition)}
+.btn-primary{background:var(--green);color:#fff;width:100%}
+.btn-primary:hover{background:#245a3d;transform:translateY(-1px);box-shadow:0 4px 12px rgba(45,110,74,0.3)}
+.btn-secondary{background:var(--purple);color:#fff}
+.btn-secondary:hover{background:var(--purple-deep)}
+.btn-ghost{background:transparent;color:var(--purple);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--lavender-light)}
+.btn-danger{background:transparent;color:var(--pink);border:1px solid var(--pink)}
+.btn-danger:hover{background:rgba(163,54,122,0.06)}
+.btn-row{display:flex;gap:0.5rem;margin-top:0.75rem}
+
+/* ─── Data Table ──────────────────────────────── */
+table{width:100%;border-collapse:collapse;font-size:0.78rem}
+th{background:var(--purple);color:#fff;padding:0.5rem 0.4rem;text-align:left;font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.03em}
+td{padding:0.45rem 0.4rem;border-bottom:1px solid var(--border)}
+tr:nth-child(even) td{background:var(--warm)}
+
+/* ─── Nav buttons in daily ────────────────────── */
+.nav-row{display:flex;justify-content:space-between;margin-top:0.75rem}
+.nav-row button{background:var(--lavender-light);color:var(--purple);border:none;padding:0.5rem 1rem;border-radius:var(--radius-sm);font-family:inherit;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all var(--transition)}
+.nav-row button:hover{background:var(--lavender)}
+.nav-row button:disabled{opacity:0.3;cursor:not-allowed}
+
+/* ─── Empty state ─────────────────────────────── */
+.empty-state{text-align:center;padding:3rem 1rem;color:var(--text-muted)}
+.empty-icon{font-size:3rem;margin-bottom:0.5rem;opacity:0.3}
+
+/* ─── Toast ───────────────────────────────────── */
+.toast{position:fixed;bottom:4rem;left:50%;transform:translateX(-50%) translateY(80px);background:var(--purple-deep);color:#fff;padding:0.65rem 1.5rem;border-radius:50px;font-size:0.82rem;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:1000;opacity:0;transition:all .4s ease;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+footer{background:var(--purple-deep);color:rgba(255,255,255,0.35);text-align:center;padding:0.4rem;font-size:0.65rem}
+
+@media(max-width:400px){main{padding:0.85rem}.card{padding:0.85rem}}

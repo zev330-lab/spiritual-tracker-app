@@ -1,137 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Manifest and icons for PWA -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" sizes="192x192" href="icon-192x192.png">
-  <link rel="apple-touch-icon" href="icon-512x512.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#5a2d76">
   <title>Spiritual Practice Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon-192x192.png">
+  <link rel="apple-touch-icon" href="icon-512x512.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Nunito+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>Spiritual Practice Tracker</h1>
-  </header>
-  <main>
-    <!-- Configuration section displayed on first run -->
-    <section id="configSection" class="section">
-      <h2>Setup Your Program</h2>
-      <p>Define your start date, program length and daily times. You can always update these later.</p>
-      <form id="configForm">
-        <label>
-          Start date:
-          <input type="date" id="startDate" required>
-        </label>
-        <label>
-          Program length (in days):
-          <input type="number" id="programLength" min="28" max="366" value="180" required>
-        </label>
-        <label>
-          Session time (HH:MM):
-          <input type="time" id="sessionTime" value="09:00" required>
-        </label>
-        <label>
-          Data entry time (HH:MM):
-          <input type="time" id="recordTime" value="21:00" required>
-        </label>
-        <button type="submit">Save &amp; Start</button>
-      </form>
-    </section>
-
-    <!-- Daily view section -->
-    <section id="dailySection" class="section hidden">
-      <h2 id="dateHeading"></h2>
-      <div id="dayType"></div>
-      <div id="instructions"></div>
-      <button id="recordMetricsBtn" class="primary">Record Today&#39;s Metrics</button>
-      <div class="nav-buttons">
-        <button id="previousDayBtn">Previous</button>
-        <button id="nextDayBtn">Next</button>
-      </div>
-      <button id="viewExportBtn">View Data &amp; Export</button>
-    </section>
-
-    <!-- Metrics entry section -->
-    <section id="metricsSection" class="section hidden">
-      <h2>Daily Metrics</h2>
-      <form id="metricsForm">
-        <p>Rate your urges today on a scale of 0–10 (0 = none, 10 = extremely strong):</p>
-        <label>
-          Pornography urge:
-          <input type="number" name="pornUrge" min="0" max="10" step="1" required>
-        </label>
-        <label>
-          Masturbation urge:
-          <input type="number" name="mastUrge" min="0" max="10" step="1" required>
-        </label>
-        <label>
-          Cigarette craving:
-          <input type="number" name="cigUrge" min="0" max="10" step="1" required>
-        </label>
-        <label>
-          Marijuana craving:
-          <input type="number" name="weedUrge" min="0" max="10" step="1" required>
-        </label>
-        <p>Did you engage in these behaviours today?</p>
-        <label>
-          Viewed pornography:
-          <select name="pornUsed" required>
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-        </label>
-        <label>
-          Masturbated:
-          <select name="mastUsed" required>
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-        </label>
-        <label>
-          Smoked cigarettes:
-          <select name="cigUsed" required>
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-        </label>
-        <label>
-          Used marijuana:
-          <select name="weedUsed" required>
-            <option value="no">No</option>
-            <option value="yes">Yes</option>
-          </select>
-        </label>
-        <p>Additional metrics:</p>
-        <label>
-          Mood/clarity (0–10):
-          <input type="number" name="mood" min="0" max="10" step="1" required>
-        </label>
-        <label>
-          Spiritual groundedness (0–10):
-          <input type="number" name="ground" min="0" max="10" step="1" required>
-        </label>
-        <label>
-          Notes:
-          <textarea name="notes" rows="3" placeholder="Anything notable today..."></textarea>
-        </label>
-        <button type="submit" class="primary">Save Metrics</button>
-        <button type="button" id="cancelMetricsBtn">Cancel</button>
-      </form>
-    </section>
-
-    <!-- Data review and export -->
-    <section id="reviewSection" class="section hidden">
-      <h2>Your Data</h2>
-      <div id="dataTableContainer"></div>
-      <button id="exportCSVBtn">Download CSV</button>
-      <button id="closeReviewBtn">Close</button>
-    </section>
-  </main>
-  <footer>
-    <p>&copy; <span id="yearSpan"></span> Spiritual Practice Tracker</p>
-  </footer>
+  <div id="app-shell">
+    <header>
+      <h1 class="logo">Spiritual Practice</h1>
+      <p class="tagline">Tracker</p>
+    </header>
+    <nav id="nav">
+      <button class="nav-btn active" data-page="daily"><span class="nav-icon">◉</span> Today</button>
+      <button class="nav-btn" data-page="data"><span class="nav-icon">◷</span> Data</button>
+      <button class="nav-btn" data-page="setup"><span class="nav-icon">◎</span> Setup</button>
+    </nav>
+    <main id="main"></main>
+    <footer><span id="version"></span></footer>
+  </div>
+  <div id="toast" class="toast"></div>
   <script src="script.js"></script>
 </body>
 </html>

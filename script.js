@@ -1,342 +1,403 @@
-(function() {
-  // Utility: parse and format dates
-  function toISODate(date) {
-    return date.toISOString().split('T')[0];
+/* Spiritual Practice Tracker — v2.0.0 — Complete Rebuild */
+(function () {
+  'use strict';
+  const VERSION = 'v2.0.0';
+  let currentPage = 'daily';
+  let currentIdx = 0;
+
+  const $ = (s, p) => (p || document).querySelector(s);
+  const $$ = (s, p) => [...(p || document).querySelectorAll(s)];
+  const el = (tag, attrs = {}, children = []) => {
+    const e = document.createElement(tag);
+    Object.entries(attrs).forEach(([k, v]) => {
+      if (k === 'className') e.className = v;
+      else if (k === 'html') e.innerHTML = v;
+      else if (k === 'text') e.textContent = v;
+      else if (k.startsWith('on') && k.length > 2) e.addEventListener(k.slice(2).toLowerCase(), v);
+      else e.setAttribute(k, v);
+    });
+    children.forEach(c => { if (typeof c === 'string') e.appendChild(document.createTextNode(c)); else if (c) e.appendChild(c); });
+    return e;
+  };
+
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
-  function parseDate(str) {
-    // str expected in yyyy-mm-dd
-    const parts = str.split('-');
-    return new Date(parts[0], parts[1] - 1, parts[2]);
+
+  function friendlyDate(iso) {
+    const d = new Date(iso + 'T12:00:00');
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
   }
-  function dayTypeForDate(d) {
-    // A-days: Mon (1), Wed (3), Fri (5), Sun (0)
-    // B-days: Tue (2), Thu (4), Sat (6)
+
+  /* ── Schedule logic ─────────────────────────────── */
+  function dayType(iso) {
+    const d = new Date(iso + 'T12:00:00');
     const dow = d.getDay();
-    return (dow === 1 || dow === 3 || dow === 5 || dow === 0) ? 'A' : 'B';
+    return (dow === 0 || dow === 1 || dow === 3 || dow === 5) ? 'A' : 'B';
   }
-  function getInstructions(dayType) {
-    const baseIntro =
-      'Step 1 – Safety & Kedushah:\nSettle yourself. Recite a short protective prayer (e.g., Kriat Shema) asking that only truth and goodness come forward.';
-    const tiferet =
-      'Step 2 – Tiferet Alignment:\nFocus on your heart center. Breathe slowly (inhale 4, exhale 6–8), repeating a word like “emet” on each inhale until you feel present and humble.';
-    const invitation =
-      'Step 3 – Invitation (A-day):\n“If there are beings permitted to help me toward purity and wholeness, I am open to receiving help in a way aligned with truth and goodness.” Then rest in silence.';
-    const baseline =
-      'Step 3 – Baseline (B-day):\nRest quietly and continue focusing on the breath. No invitation is extended on baseline days.';
-    const closing =
-      'Step 4 – Closing & Integration:\nThank whatever has arisen. Seal the session: “This session is complete. Only what serves truth and goodness remains.” Ground yourself by noticing your body and surroundings.';
-    return [baseIntro, tiferet, dayType === 'A' ? invitation : baseline, closing].join('\n\n');
+
+  function getInstructions(type) {
+    const steps = [
+      '<strong>Step 1 — Safety & Kedushah</strong>\nSettle yourself. Recite a short protective prayer (e.g., Kriat Shema) asking that only truth and goodness come forward.',
+      '<strong>Step 2 — Tiferet Alignment</strong>\nFocus on your heart center. Breathe slowly (inhale 4, exhale 6–8), repeating a word like "emet" on each inhale until you feel present and humble.',
+      type === 'A'
+        ? '<strong>Step 3 — Invitation (A-Day)</strong>\n"If there are beings permitted to help me toward purity and wholeness, I am open to receiving help in a way aligned with truth and goodness." Then rest in silence.'
+        : '<strong>Step 3 — Baseline (B-Day)</strong>\nRest quietly and continue focusing on the breath. No invitation is extended on baseline days.',
+      '<strong>Step 4 — Closing & Integration</strong>\nThank whatever has arisen. Seal the session: "This session is complete. Only what serves truth and goodness remains." Ground yourself by noticing your body and surroundings.'
+    ];
+    return steps.join('\n\n');
   }
-  function computeSchedule(startDateStr, length) {
+
+  function buildSchedule(startDate, length) {
     const schedule = [];
-    const startDate = parseDate(startDateStr);
+    const start = new Date(startDate + 'T12:00:00');
     for (let i = 0; i < length; i++) {
-      const d = new Date(startDate);
+      const d = new Date(start);
       d.setDate(d.getDate() + i);
-      const dateISO = toISODate(d);
-      const dayType = dayTypeForDate(d);
-      const instructions = getInstructions(dayType);
-      schedule.push({ date: dateISO, dayType, instructions });
+      const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      schedule.push({ date: iso, dayType: dayType(iso) });
     }
     return schedule;
   }
-  // Load and save helpers
-  function loadConfig() {
-    const c = localStorage.getItem('st_config');
-    return c ? JSON.parse(c) : null;
-  }
-  function saveConfig(cfg) {
-    localStorage.setItem('st_config', JSON.stringify(cfg));
-  }
-  function loadSchedule() {
-    const s = localStorage.getItem('st_schedule');
-    return s ? JSON.parse(s) : null;
-  }
-  function saveSchedule(schedule) {
-    localStorage.setItem('st_schedule', JSON.stringify(schedule));
-  }
-  function loadMetrics() {
-    const m = localStorage.getItem('st_metrics');
-    return m ? JSON.parse(m) : {};
-  }
-  function saveMetrics(metrics) {
-    localStorage.setItem('st_metrics', JSON.stringify(metrics));
+
+  /* ── Data ────────────────────────────────────────── */
+  function getCfg() { try { return JSON.parse(localStorage.getItem('st2_cfg')) || null; } catch { return null; } }
+  function saveCfg(c) { localStorage.setItem('st2_cfg', JSON.stringify(c)); }
+  function getSchedule() { try { return JSON.parse(localStorage.getItem('st2_sched')) || []; } catch { return []; } }
+  function saveSchedule(s) { localStorage.setItem('st2_sched', JSON.stringify(s)); }
+  function getMetrics() { try { return JSON.parse(localStorage.getItem('st2_metrics')) || {}; } catch { return {}; } }
+  function saveMetrics(m) { localStorage.setItem('st2_metrics', JSON.stringify(m)); }
+
+  /* ── Toast ───────────────────────────────────────── */
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  // DOM elements
-  const configSection = document.getElementById('configSection');
-  const configForm = document.getElementById('configForm');
-  const dailySection = document.getElementById('dailySection');
-  const metricsSection = document.getElementById('metricsSection');
-  const reviewSection = document.getElementById('reviewSection');
-  const dateHeading = document.getElementById('dateHeading');
-  const dayTypeDiv = document.getElementById('dayType');
-  const instructionsDiv = document.getElementById('instructions');
-  const recordMetricsBtn = document.getElementById('recordMetricsBtn');
-  const previousDayBtn = document.getElementById('previousDayBtn');
-  const nextDayBtn = document.getElementById('nextDayBtn');
-  const viewExportBtn = document.getElementById('viewExportBtn');
-  const metricsForm = document.getElementById('metricsForm');
-  const cancelMetricsBtn = document.getElementById('cancelMetricsBtn');
-  const dataTableContainer = document.getElementById('dataTableContainer');
-  const exportCSVBtn = document.getElementById('exportCSVBtn');
-  const closeReviewBtn = document.getElementById('closeReviewBtn');
-  const yearSpan = document.getElementById('yearSpan');
+  /* ── Navigation ──────────────────────────────────── */
+  const main = $('#main');
+  const navBtns = $$('.nav-btn');
 
-  let schedule = [];
-  let config = null;
-  let metrics = {};
-  let currentIndex = 0;
-
-  // Show or hide sections
-  function showSection(section) {
-    [configSection, dailySection, metricsSection, reviewSection].forEach(sec => {
-      if (sec === section) {
-        sec.classList.remove('hidden');
-      } else {
-        sec.classList.add('hidden');
-      }
-    });
-  }
-
-  function init() {
-    // year in footer
-    yearSpan.textContent = new Date().getFullYear();
-    // Service worker registration
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js').catch(function(err) {
-        console.error('SW registration failed', err);
-      });
+  function navigate(page) {
+    currentPage = page;
+    navBtns.forEach(b => b.classList.toggle('active', b.dataset.page === page));
+    main.innerHTML = '';
+    main.style.animation = 'none'; void main.offsetHeight; main.style.animation = 'fadeUp .35s ease-out';
+    switch (page) {
+      case 'daily': renderDaily(); break;
+      case 'data': renderData(); break;
+      case 'setup': renderSetup(); break;
     }
-    // load config
-    config = loadConfig();
-    schedule = loadSchedule() || [];
-    metrics = loadMetrics();
-    if (!config || schedule.length === 0) {
-      showSection(configSection);
+  }
+
+  navBtns.forEach(b => b.addEventListener('click', () => navigate(b.dataset.page)));
+
+  /* ── Daily View ──────────────────────────────────── */
+  function renderDaily() {
+    const cfg = getCfg();
+    const schedule = getSchedule();
+
+    if (!cfg || !schedule.length) {
+      main.appendChild(el('div', { className: 'empty-state' }, [
+        el('div', { className: 'empty-icon', text: '◎' }),
+        el('p', { text: 'Configure your practice to get started.' }),
+        el('button', { className: 'btn btn-primary', text: 'Set Up Practice', style: 'margin-top:1rem;max-width:200px;margin-left:auto;margin-right:auto', onClick: () => navigate('setup') })
+      ]));
+      return;
+    }
+
+    // Find today in schedule
+    const today = todayISO();
+    let idx = schedule.findIndex(s => s.date === today);
+    if (idx < 0) idx = currentIdx;
+    currentIdx = idx;
+
+    const entry = schedule[idx];
+    if (!entry) return;
+
+    const type = entry.dayType;
+    const metrics = getMetrics();
+    const hasMetrics = !!metrics[entry.date];
+
+    // Header
+    main.appendChild(el('h2', { className: 'page-title', text: friendlyDate(entry.date) }));
+    const subWrap = el('div', { style: 'display:flex;align-items:center;gap:0.75rem;margin-bottom:1.25rem' });
+    subWrap.appendChild(el('span', { className: `day-badge ${type === 'A' ? 'a-day' : 'b-day'}`, text: type === 'A' ? 'Invitation Day (A)' : 'Baseline Day (B)' }));
+    subWrap.appendChild(el('span', { className: 'page-subtitle', style: 'margin:0', text: `Day ${idx + 1} of ${schedule.length}` }));
+    main.appendChild(subWrap);
+
+    // Instructions
+    const instrCard = el('div', { className: 'card' });
+    instrCard.appendChild(el('div', { className: 'card-label', text: 'Session Guide' }));
+    instrCard.appendChild(el('div', { className: 'instructions', html: getInstructions(type) }));
+    main.appendChild(instrCard);
+
+    // Record metrics button or show existing
+    if (hasMetrics) {
+      const m = metrics[entry.date];
+      const card = el('div', { className: 'card' });
+      card.appendChild(el('div', { className: 'card-label', text: '✓ Metrics Recorded' }));
+      card.appendChild(el('p', { style: 'font-size:0.82rem;color:var(--text-light)', text: `Mood: ${m.mood}/10 · Groundedness: ${m.ground}/10` }));
+      if (m.notes) card.appendChild(el('p', { style: 'font-size:0.82rem;color:var(--text-muted);margin-top:0.25rem;font-style:italic', text: m.notes }));
+      const editBtn = el('button', { className: 'btn btn-ghost', text: 'Edit Metrics', style: 'margin-top:0.5rem', onClick: () => showMetricsForm(entry.date, m) });
+      card.appendChild(editBtn);
+      main.appendChild(card);
     } else {
-      // Determine currentIndex based on today
-      const todayISO = toISODate(new Date());
-      currentIndex = schedule.findIndex(item => item.date === todayISO);
-      if (currentIndex < 0) currentIndex = 0;
-      showSection(dailySection);
-      displayDaily();
-      scheduleNotifications();
+      const recBtn = el('button', { className: 'btn btn-primary', text: '◉ Record Today\'s Metrics', onClick: () => showMetricsForm(entry.date) });
+      main.appendChild(recBtn);
     }
+
+    // Day navigation
+    const nav = el('div', { className: 'nav-row' });
+    const prevBtn = el('button', { text: '← Previous', onClick: () => { currentIdx = Math.max(0, currentIdx - 1); navigate('daily'); } });
+    if (idx === 0) prevBtn.disabled = true;
+    const nextBtn = el('button', { text: 'Next →', onClick: () => { currentIdx = Math.min(schedule.length - 1, currentIdx + 1); navigate('daily'); } });
+    if (idx >= schedule.length - 1) nextBtn.disabled = true;
+    nav.append(prevBtn, nextBtn);
+    main.appendChild(nav);
   }
 
-  configForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const startDate = document.getElementById('startDate').value;
-    const programLength = parseInt(document.getElementById('programLength').value, 10);
-    const sessionTime = document.getElementById('sessionTime').value;
-    const recordTime = document.getElementById('recordTime').value;
-    config = { startDate, programLength, sessionTime, recordTime };
-    saveConfig(config);
-    schedule = computeSchedule(startDate, programLength);
-    saveSchedule(schedule);
-    metrics = {};
-    saveMetrics(metrics);
-    currentIndex = 0;
-    showSection(dailySection);
-    displayDaily();
-    scheduleNotifications();
-  });
+  /* ── Metrics Form ────────────────────────────────── */
+  function showMetricsForm(date, existing = {}) {
+    main.innerHTML = '';
+    main.appendChild(el('h2', { className: 'page-title', text: 'Daily Metrics' }));
+    main.appendChild(el('p', { className: 'page-subtitle', text: friendlyDate(date) }));
 
-  function displayDaily() {
-    if (currentIndex < 0) currentIndex = 0;
-    if (currentIndex >= schedule.length) currentIndex = schedule.length - 1;
-    const entry = schedule[currentIndex];
-    dateHeading.textContent = new Date(entry.date).toDateString();
-    dayTypeDiv.textContent = entry.dayType === 'A' ? 'Invitation Day (A)' : 'Baseline Day (B)';
-    instructionsDiv.textContent = entry.instructions;
-    // disable nav buttons at boundaries
-    previousDayBtn.disabled = currentIndex === 0;
-    nextDayBtn.disabled = currentIndex === schedule.length - 1;
-  }
+    const card = el('div', { className: 'card' });
 
-  previousDayBtn.addEventListener('click', function() {
-    currentIndex--;
-    displayDaily();
-  });
-  nextDayBtn.addEventListener('click', function() {
-    currentIndex++;
-    displayDaily();
-  });
+    // Urge sliders
+    card.appendChild(el('div', { className: 'card-label', text: 'Urge Levels (0–10)' }));
+    const urges = [
+      { key: 'pornUrge', label: 'Pornography urge' },
+      { key: 'mastUrge', label: 'Masturbation urge' },
+      { key: 'cigUrge', label: 'Cigarette craving' },
+      { key: 'weedUrge', label: 'Marijuana craving' }
+    ];
 
-  recordMetricsBtn.addEventListener('click', function() {
-    showMetricsForm();
-  });
-
-  function showMetricsForm() {
-    // populate form with existing data if available
-    const entry = schedule[currentIndex];
-    const metricKey = entry.date;
-    const mData = metrics[metricKey] || {};
-    metricsForm.pornUrge.value = mData.pornUrge ?? '';
-    metricsForm.mastUrge.value = mData.mastUrge ?? '';
-    metricsForm.cigUrge.value = mData.cigUrge ?? '';
-    metricsForm.weedUrge.value = mData.weedUrge ?? '';
-    metricsForm.pornUsed.value = mData.pornUsed ?? 'no';
-    metricsForm.mastUsed.value = mData.mastUsed ?? 'no';
-    metricsForm.cigUsed.value = mData.cigUsed ?? 'no';
-    metricsForm.weedUsed.value = mData.weedUsed ?? 'no';
-    metricsForm.mood.value = mData.mood ?? '';
-    metricsForm.ground.value = mData.ground ?? '';
-    metricsForm.notes.value = mData.notes ?? '';
-    showSection(metricsSection);
-  }
-
-  metricsForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const entry = schedule[currentIndex];
-    const metricKey = entry.date;
-    const formData = new FormData(metricsForm);
-    const mEntry = {};
-    for (const [key, value] of formData.entries()) {
-      mEntry[key] = value;
-    }
-    metrics[metricKey] = mEntry;
-    saveMetrics(metrics);
-    showSection(dailySection);
-  });
-
-  cancelMetricsBtn.addEventListener('click', function() {
-    showSection(dailySection);
-  });
-
-  viewExportBtn.addEventListener('click', function() {
-    renderDataTable();
-    showSection(reviewSection);
-  });
-
-  closeReviewBtn.addEventListener('click', function() {
-    showSection(dailySection);
-  });
-
-  exportCSVBtn.addEventListener('click', function() {
-    const csv = buildCSV();
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'spiritual-practice-data.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-
-  function renderDataTable() {
-    // Build table from metrics
-    const tbl = document.createElement('table');
-    const headerRow = document.createElement('tr');
-    ['Date','Day type','Porn urge','Mast. urge','Cig. urge','Weed urge','Viewed porn','Masturbated','Smoked','Used weed','Mood','Ground','Notes'].forEach(h => {
-      const th = document.createElement('th');
-      th.textContent = h;
-      headerRow.appendChild(th);
+    urges.forEach(u => {
+      const g = el('div', { className: 'metric-group' });
+      g.appendChild(el('div', { className: 'metric-label', html: `${u.label} <span class="metric-hint">0 = none, 10 = extreme</span>` }));
+      const wrap = el('div', { className: 'slider-wrap' });
+      const val = el('span', { className: 'slider-val', text: existing[u.key] || '0' });
+      const slider = el('input', { type: 'range', min: '0', max: '10', value: existing[u.key] || '0', id: `m-${u.key}` });
+      slider.addEventListener('input', () => val.textContent = slider.value);
+      wrap.append(slider, val);
+      g.appendChild(wrap);
+      card.appendChild(g);
     });
-    tbl.appendChild(headerRow);
-    schedule.forEach(item => {
-      const row = document.createElement('tr');
-      const mData = metrics[item.date] || {};
-      const fields = [
-        item.date,
-        item.dayType,
-        mData.pornUrge ?? '',
-        mData.mastUrge ?? '',
-        mData.cigUrge ?? '',
-        mData.weedUrge ?? '',
-        mData.pornUsed ?? '',
-        mData.mastUsed ?? '',
-        mData.cigUsed ?? '',
-        mData.weedUsed ?? '',
-        mData.mood ?? '',
-        mData.ground ?? '',
-        mData.notes ?? ''
-      ];
-      fields.forEach(val => {
-        const td = document.createElement('td');
-        td.textContent = val;
-        row.appendChild(td);
+
+    // Behavior toggles
+    card.appendChild(el('div', { className: 'card-label', text: 'Behaviors Today', style: 'margin-top:0.75rem' }));
+    const toggles = [
+      { key: 'pornUsed', label: 'Viewed pornography' },
+      { key: 'mastUsed', label: 'Masturbated' },
+      { key: 'cigUsed', label: 'Smoked cigarettes' },
+      { key: 'weedUsed', label: 'Used marijuana' }
+    ];
+
+    toggles.forEach(t => {
+      const row = el('div', { className: 'toggle-row' });
+      row.appendChild(el('span', { className: 'toggle-label', text: t.label }));
+      const btn = el('button', {
+        className: `toggle-btn${existing[t.key] === 'yes' ? ' yes' : ''}`,
+        text: existing[t.key] === 'yes' ? 'Yes' : 'No',
+        id: `m-${t.key}`,
+        type: 'button'
       });
+      btn.addEventListener('click', () => {
+        const isYes = btn.classList.toggle('yes');
+        btn.textContent = isYes ? 'Yes' : 'No';
+      });
+      row.appendChild(btn);
+      card.appendChild(row);
+    });
+
+    // Mood & groundedness
+    card.appendChild(el('div', { className: 'card-label', text: 'Wellbeing', style: 'margin-top:0.75rem' }));
+    [{ key: 'mood', label: 'Mood / Clarity' }, { key: 'ground', label: 'Spiritual Groundedness' }].forEach(u => {
+      const g = el('div', { className: 'metric-group' });
+      g.appendChild(el('div', { className: 'metric-label', text: u.label }));
+      const wrap = el('div', { className: 'slider-wrap' });
+      const val = el('span', { className: 'slider-val', text: existing[u.key] || '5' });
+      const slider = el('input', { type: 'range', min: '0', max: '10', value: existing[u.key] || '5', id: `m-${u.key}` });
+      slider.addEventListener('input', () => val.textContent = slider.value);
+      wrap.append(slider, val);
+      g.appendChild(wrap);
+      card.appendChild(g);
+    });
+
+    // Notes
+    card.appendChild(el('div', { className: 'card-label', text: 'Notes', style: 'margin-top:0.5rem' }));
+    const noteArea = el('textarea', { className: 'input-field', placeholder: 'Observations, experiences, insights...', rows: '3', id: 'm-notes' });
+    noteArea.value = existing.notes || '';
+    card.appendChild(noteArea);
+
+    main.appendChild(card);
+
+    // Save / Cancel buttons
+    const btnRow = el('div', { className: 'btn-row' });
+    const saveBtn = el('button', { className: 'btn btn-primary', text: '✓ Save Metrics', style: 'flex:2' });
+    saveBtn.addEventListener('click', () => {
+      const metrics = getMetrics();
+      const entry = {};
+      urges.forEach(u => entry[u.key] = $(`#m-${u.key}`).value);
+      toggles.forEach(t => entry[t.key] = $(`#m-${t.key}`).classList.contains('yes') ? 'yes' : 'no');
+      entry.mood = $('#m-mood').value;
+      entry.ground = $('#m-ground').value;
+      entry.notes = $('#m-notes').value.trim();
+      metrics[date] = entry;
+      saveMetrics(metrics);
+      toast('Metrics saved ✓');
+      navigate('daily');
+    });
+    const cancelBtn = el('button', { className: 'btn btn-ghost', text: 'Cancel', style: 'flex:1', onClick: () => navigate('daily') });
+    btnRow.append(saveBtn, cancelBtn);
+    main.appendChild(btnRow);
+  }
+
+  /* ── Data View ───────────────────────────────────── */
+  function renderData() {
+    const schedule = getSchedule();
+    const metrics = getMetrics();
+    main.appendChild(el('h2', { className: 'page-title', text: 'Practice Data' }));
+
+    const dates = Object.keys(metrics).sort((a, b) => b.localeCompare(a));
+    if (!dates.length) {
+      main.appendChild(el('div', { className: 'empty-state' }, [
+        el('div', { className: 'empty-icon', text: '◷' }),
+        el('p', { text: 'No metrics recorded yet.' })
+      ]));
+      return;
+    }
+
+    main.appendChild(el('p', { className: 'page-subtitle', text: `${dates.length} days with data` }));
+
+    // Summary stats
+    const card = el('div', { className: 'card' });
+    card.appendChild(el('div', { className: 'card-label', text: 'Averages' }));
+    const sums = { mood: 0, ground: 0, pornUrge: 0, cigUrge: 0 };
+    let count = 0;
+    dates.forEach(d => {
+      const m = metrics[d];
+      if (m.mood != null) { sums.mood += Number(m.mood); sums.ground += Number(m.ground); sums.pornUrge += Number(m.pornUrge || 0); sums.cigUrge += Number(m.cigUrge || 0); count++; }
+    });
+    if (count) {
+      const avg = k => (sums[k] / count).toFixed(1);
+      card.appendChild(el('p', { style: 'font-size:0.85rem;color:var(--text-light);line-height:1.8', html: `Mood: <strong>${avg('mood')}</strong>/10 · Groundedness: <strong>${avg('ground')}</strong>/10<br>Avg Porn Urge: <strong>${avg('pornUrge')}</strong> · Avg Cig Craving: <strong>${avg('cigUrge')}</strong>` }));
+    }
+    main.appendChild(card);
+
+    // Table (scrollable)
+    const tableWrap = el('div', { style: 'overflow-x:auto' });
+    const tbl = el('table');
+    const hRow = el('tr');
+    ['Date', 'Type', 'Mood', 'Ground', 'P-Urge', 'M-Urge', 'C-Urge', 'W-Urge'].forEach(h => hRow.appendChild(el('th', { text: h })));
+    tbl.appendChild(hRow);
+
+    dates.forEach(d => {
+      const m = metrics[d];
+      const sched = schedule.find(s => s.date === d);
+      const row = el('tr');
+      [d.slice(5), sched?.dayType || '?', m.mood, m.ground, m.pornUrge, m.mastUrge, m.cigUrge, m.weedUrge].forEach(v => row.appendChild(el('td', { text: v ?? '' })));
       tbl.appendChild(row);
     });
-    dataTableContainer.innerHTML = '';
-    dataTableContainer.appendChild(tbl);
-  }
+    tableWrap.appendChild(tbl);
+    main.appendChild(tableWrap);
 
-  function buildCSV() {
-    // Build CSV string
-    const headers = ['date','dayType','pornUrge','mastUrge','cigUrge','weedUrge','pornUsed','mastUsed','cigUsed','weedUsed','mood','ground','notes'];
-    let lines = [headers.join(',')];
-    schedule.forEach(item => {
-      const mData = metrics[item.date] || {};
-      const row = [
-        item.date,
-        item.dayType,
-        mData.pornUrge ?? '',
-        mData.mastUrge ?? '',
-        mData.cigUrge ?? '',
-        mData.weedUrge ?? '',
-        mData.pornUsed ?? '',
-        mData.mastUsed ?? '',
-        mData.cigUsed ?? '',
-        mData.weedUsed ?? '',
-        mData.mood ?? '',
-        mData.ground ?? '',
-        (mData.notes ? '"' + mData.notes.replace(/"/g,'""') + '"' : '')
-      ];
-      lines.push(row.join(','));
-    });
-    return lines.join('\n');
-  }
-
-  function scheduleNotifications() {
-    if (!('Notification' in window)) return;
-    if (Notification.permission !== 'granted') {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          scheduleNotificationsInternal();
-        }
+    // Export
+    const expBtn = el('button', { className: 'btn btn-ghost', text: '↓ Export CSV', style: 'margin-top:0.75rem' });
+    expBtn.addEventListener('click', () => {
+      const headers = ['date', 'dayType', 'pornUrge', 'mastUrge', 'cigUrge', 'weedUrge', 'pornUsed', 'mastUsed', 'cigUsed', 'weedUsed', 'mood', 'ground', 'notes'];
+      let csv = headers.join(',') + '\n';
+      schedule.forEach(s => {
+        const m = metrics[s.date] || {};
+        csv += [s.date, s.dayType, m.pornUrge || '', m.mastUrge || '', m.cigUrge || '', m.weedUrge || '', m.pornUsed || '', m.mastUsed || '', m.cigUsed || '', m.weedUsed || '', m.mood || '', m.ground || '', `"${(m.notes || '').replace(/"/g, '""')}"`].join(',') + '\n';
       });
-    } else {
-      scheduleNotificationsInternal();
-    }
-  }
-  function scheduleNotificationsInternal() {
-    // Clear any existing timers
-    if (window._stTimers) {
-      window._stTimers.forEach(t => clearTimeout(t));
-    }
-    window._stTimers = [];
-    const now = new Date();
-    // schedule notifications for next 7 days or program length whichever smaller
-    const upcoming = schedule.slice(currentIndex, currentIndex + 7);
-    upcoming.forEach(item => {
-      // schedule session reminder
-      const sessionDateTime = new Date(item.date + 'T' + config.sessionTime);
-      if (sessionDateTime > now) {
-        const diff = sessionDateTime - now;
-        window._stTimers.push(setTimeout(() => {
-          new Notification('Time for your spiritual session', {
-            body: 'Day ' + (item.dayType === 'A' ? 'Invitation (A)' : 'Baseline (B)') + ' session. Open the tracker to follow your practice.',
-            icon: 'icon-192x192.png'
-          });
-        }, diff));
-      }
-      // schedule data entry reminder
-      const recordDateTime = new Date(item.date + 'T' + config.recordTime);
-      if (recordDateTime > now) {
-        const diff2 = recordDateTime - now;
-        window._stTimers.push(setTimeout(() => {
-          new Notification('Time to record your metrics', {
-            body: 'Reflect on your day and record your metrics in the tracker.',
-            icon: 'icon-192x192.png'
-          });
-        }, diff2));
-      }
+      const a = el('a', { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: 'spiritual-practice-data.csv' });
+      a.click();
+      toast('CSV downloaded');
     });
+    main.appendChild(expBtn);
   }
 
-  // Kick off
-  document.addEventListener('DOMContentLoaded', init);
+  /* ── Setup ───────────────────────────────────────── */
+  function renderSetup() {
+    const cfg = getCfg() || {};
+    main.appendChild(el('h2', { className: 'page-title', text: 'Setup' }));
+    main.appendChild(el('p', { className: 'page-subtitle', text: 'Configure your spiritual practice program' }));
+
+    const card = el('div', { className: 'card' });
+
+    const g1 = el('div', { className: 'form-group' });
+    g1.appendChild(el('label', { text: 'Start Date' }));
+    g1.appendChild(el('input', { className: 'input-field', type: 'date', id: 's-start', value: cfg.startDate || todayISO() }));
+    card.appendChild(g1);
+
+    const g2 = el('div', { className: 'form-group' });
+    g2.appendChild(el('label', { text: 'Program Length (days)' }));
+    g2.appendChild(el('input', { className: 'input-field', type: 'number', id: 's-len', min: '28', max: '366', value: cfg.programLength || '180' }));
+    card.appendChild(g2);
+
+    const g3 = el('div', { className: 'form-group' });
+    g3.appendChild(el('label', { text: 'Session Time' }));
+    g3.appendChild(el('input', { className: 'input-field', type: 'time', id: 's-session', value: cfg.sessionTime || '09:00' }));
+    card.appendChild(g3);
+
+    const g4 = el('div', { className: 'form-group' });
+    g4.appendChild(el('label', { text: 'Data Entry Time' }));
+    g4.appendChild(el('input', { className: 'input-field', type: 'time', id: 's-record', value: cfg.recordTime || '21:00' }));
+    card.appendChild(g4);
+
+    card.appendChild(el('div', { style: 'font-size:0.8rem;color:var(--text-muted);line-height:1.5;padding:0.75rem;background:var(--warm);border-radius:var(--radius-sm);border-left:3px solid var(--lavender)', html: '<strong>A-Days</strong> (Sun, Mon, Wed, Fri): Invitation protocol<br><strong>B-Days</strong> (Tue, Thu, Sat): Baseline — breath only, no invitation' }));
+
+    const saveBtn = el('button', { className: 'btn btn-primary', text: cfg.startDate ? 'Update & Rebuild Schedule' : 'Save & Start', style: 'margin-top:0.75rem' });
+    saveBtn.addEventListener('click', () => {
+      const newCfg = {
+        startDate: $('#s-start').value,
+        programLength: parseInt($('#s-len').value) || 180,
+        sessionTime: $('#s-session').value,
+        recordTime: $('#s-record').value
+      };
+      saveCfg(newCfg);
+      const sched = buildSchedule(newCfg.startDate, newCfg.programLength);
+      saveSchedule(sched);
+      toast('Practice configured ✓');
+      currentIdx = 0;
+      navigate('daily');
+    });
+    card.appendChild(saveBtn);
+    main.appendChild(card);
+
+    // Reset
+    const resetBtn = el('button', { className: 'btn btn-danger', text: 'Reset All Data', style: 'margin-top:0.75rem' });
+    resetBtn.addEventListener('click', () => {
+      if (confirm('Clear all data and start fresh?')) {
+        ['st2_cfg', 'st2_sched', 'st2_metrics'].forEach(k => localStorage.removeItem(k));
+        toast('Data cleared');
+        navigate('setup');
+      }
+    });
+    main.appendChild(resetBtn);
+  }
+
+  /* ── Init ─────────────────────────────────────────── */
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('service-worker.js').catch(() => {});
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const v = $('#version');
+    if (v) v.textContent = VERSION;
+    const cfg = getCfg();
+    const sched = getSchedule();
+    if (cfg && sched.length) {
+      const today = todayISO();
+      currentIdx = sched.findIndex(s => s.date === today);
+      if (currentIdx < 0) currentIdx = 0;
+      navigate('daily');
+    } else {
+      navigate('setup');
+    }
+  });
 })();
